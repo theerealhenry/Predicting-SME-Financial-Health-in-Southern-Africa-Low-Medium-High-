@@ -312,7 +312,7 @@ def preprocess_train_test(
     train_cols = [c for c in train_clean.columns if c != cfg.target_col]
     test_clean = test_clean.reindex(columns=train_cols, fill_value=np.nan)
 
-    return train_clean, test_clean
+    return train_clean, test_clean 
 
 
 
