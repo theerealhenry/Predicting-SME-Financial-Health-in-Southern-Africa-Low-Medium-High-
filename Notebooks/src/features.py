@@ -228,7 +228,7 @@ def engineer_features(df: pd.DataFrame, cfg: Optional[FeatureConfig] = None) -> 
     # perception_insurance_important as separate binary
     if "perception_insurance_important" in df.columns:
         df["perception_insurance_important__bin"] = _binary_from_category(
-            df["perception_insurance_important"], positive_mode="yes"
+            df["perception_insurance_important"]
         )
 
     # -----------------------------------------------------
@@ -288,7 +288,7 @@ def engineer_features(df: pd.DataFrame, cfg: Optional[FeatureConfig] = None) -> 
 
     for c in extra_binary_cols:
         if c in df.columns:
-            df[f"{c}__bin"] = _binary_from_category(df[c], positive_mode="yes")
+            df[f"{c}__bin"] = _binary_from_category(df[c],)
 
     # composite operational behavior score
     op_cols = [f"{c}__bin" for c in extra_binary_cols if f"{c}__bin" in df.columns]
