@@ -126,6 +126,53 @@ This improves:
 
 ## 📊 Key Insights
 
+This project leverages advanced feature engineering and explainable AI techniques to uncover the key drivers of SME financial health.
+
+---
+
+### 🔍 Feature Importance (SHAP Analysis)
+
+SHAP (SHapley Additive exPlanations) was used to interpret model predictions and identify the most influential features.
+
+![SHAP Summary](figures/Top SHAP features.png)
+
+**Key Observations:**
+- Financial access indicators strongly influence SME health classification
+- Business performance metrics (income, expenses, turnover) are critical predictors
+- Risk and resilience-related features significantly impact lower financial health categories
+
+---
+
+### 📈 Target Distribution
+
+Understanding class distribution is critical for model design and evaluation.
+
+![Target Distribution](figures/Target Distribution (Count).png)
+
+**Insights:**
+- The dataset exhibits class imbalance across financial health categories
+- Macro F1-score was chosen as the evaluation metric to ensure balanced performance
+
+---
+
+### 🧠 Model Explainability
+
+The model incorporates explainability at its core:
+- SHAP values provide global and local interpretability
+- Enables trust and transparency in predictions
+- Supports real-world decision-making applications
+
+---
+
+The combination of:
+- Robust feature engineering
+- Ensemble modeling (CatBoost + LightGBM)
+- Explainability techniques (SHAP)
+
+→ Results in a highly interpretable and high-performing financial health prediction system.
+
+## 💡 Key TakeawayS
+
 ### 1️⃣ Ensemble Learning Outperforms Individual Models
 
 Combining CatBoost and LightGBM improves performance beyond either model alone.
