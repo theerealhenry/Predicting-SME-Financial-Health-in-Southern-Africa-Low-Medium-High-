@@ -274,7 +274,90 @@ data/Test.csv
 + API deployment (FastAPI)
 + Docker containerization
 
-  
+## 🐳 Docker (Production-Ready Deployment)
+
+This project includes a **production-grade Docker setup** to ensure full reproducibility and seamless deployment across environments.
+
+The Docker configuration uses a **multi-stage build** to:
+- Minimize image size
+- Isolate dependencies
+- Improve build performance
+- Ensure a clean runtime environment
+
+---
+
+### ⚙️ Build the Docker Image
+
+```bash
+docker build -t sme-financial-health .
+
+docker run --rm \
+  -v ${PWD}/models:/app/models \
+  -v ${PWD}/outputs:/app/outputs \
+  sme-financial-health
+```
+---
+
+### 📦 Volume Mounting Explained
+
+This project follows best practices by externalizing artifacts:
+
++ models/ → contains trained model files
++ outputs/ → stores generated predictions
+
+These directories are mounted at runtime to:
+
++ Avoid bloating the Docker image
++ Enable easy updates to models without rebuilding
++ Ensure reproducibility across environments
+
+---
+
+### 🧠 What Happens Inside the Container
+
+When the container runs, it:
+
+1. Loads trained CatBoost and LightGBM models
+2. Applies preprocessing and feature engineering pipelines
+3. Performs ensemble prediction
+4. Applies optimized classification thresholds
+5. Generates a submission file
+
+Output is saved to:
+
+`outputs/submission.csv`
+
+---
+
+### 🔒 Production Considerations
+
++ The container runs in a lightweight Python 3.12 environment
++ Dependencies are installed in an isolated virtual environment
++ Only essential files are included in the final image
++ Temporary files, datasets, and notebooks are excluded via `.dockerignore`
+
+---
+
+### ✅ Why Docker?
+
+Using Docker ensures:
+
++ 🔁 Reproducibility across machines
++ ⚙️ Environment consistency (no "it works on my machine" issues)
++ 🚀 Easy deployment to cloud platforms (AWS, GCP, Azure, etc.)
++ 🧩 Integration into CI/CD pipelines
+
+--- 
+
+### 💡 Tip
+
+Before running Docker inference, ensure:
+
++ Models are trained `(python -m src.train)`
++ Model files exist in the `models/` directory
+
+---
+
 ## 👤 Author
 
 **Henry**  
