@@ -1,0 +1,31 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+
+# Data
+data/
+*.csv
+*.xlsx
+
+# Models (mounted instead)
+models/
+
+# Outputs
+outputs/
+
+# Notebooks
+Notebooks/
+notebooks/
+
+# CatBoost temp
+catboost_info/
+
+# Images (optional)
+figures/
+
+# Logs
+*.log
