@@ -1,9 +1,84 @@
-# Data files
-*.csv
-*.json
-
-# Jupyter
-.ipynb_checkpoints/
-
+# =========================
 # Python
+# =========================
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# =========================
+# Jupyter Notebook
+# =========================
+.ipynb_checkpoints
+
+# =========================
+# VS Code / IDE
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+
+# =========================
+# Data Files (VERY IMPORTANT)
+# =========================
+data/
+*.csv
+*.xlsx
+*.xls
+*.parquet
+
+# If you want to keep sample data, comment above and use:
+# data/*
+# !data/sample.csv
+
+# =========================
+# Model Artifacts
+# =========================
+models/
+*.pkl
+*.joblib
+*.cbm
+*.txt
+
+# =========================
+# CatBoost artifacts
+# =========================
+catboost_info/
+
+# =========================
+# Outputs / Predictions
+# =========================
+outputs/
+submissions/
+*.csv
+
+
+# =========================
+# Temporary files
+# =========================
+*.tmp
+*.temp
+
+# =========================
+# Cache
+# =========================
+.cache/
