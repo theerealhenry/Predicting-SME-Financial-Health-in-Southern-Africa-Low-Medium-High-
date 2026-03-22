@@ -26,8 +26,8 @@ from src.features import engineer_train_test_features, FeatureConfig
 # =============================
 
 RANDOM_STATE = 42
-TRAIN_PATH = "D:\dataorg-financial-health-prediction-challenge20251204-19827-m2tn1n\Train.csv"
-TEST_PATH = "D:\dataorg-financial-health-prediction-challenge20251204-19827-m2tn1n\Test.csv"
+TRAIN_PATH = r"D:\dataorg-financial-health-prediction-challenge20251204-19827-m2tn1n\Train.csv"
+TEST_PATH = r"D:\dataorg-financial-health-prediction-challenge20251204-19827-m2tn1n\Test.csv"
 
 os.makedirs("models", exist_ok=True)
 os.makedirs("outputs", exist_ok=True)
@@ -136,6 +136,7 @@ def run_lgb_cv(X, y, X_test, params, cv):
 
     oof_proba = np.zeros((len(X), n_classes))
     test_proba = np.zeros((len(X_test), n_classes))
+    models = []  # ✅ FIX
 
     for fold, (tr_idx, va_idx) in enumerate(cv.split(X, y), 1):
         print(f"LightGBM Fold {fold}")
@@ -152,6 +153,8 @@ def run_lgb_cv(X, y, X_test, params, cv):
             callbacks=[lgb.early_stopping(100), lgb.log_evaluation(0)]
         )
 
+        models.append(model)  # ✅ FIX
+
         proba_va = model.predict_proba(X_va)
         proba_te = model.predict_proba(X_test)
 
@@ -161,6 +164,7 @@ def run_lgb_cv(X, y, X_test, params, cv):
     print(f"LightGBM OOF F1: {macro_f1(y, np.argmax(oof_proba, axis=1)):.4f}")
 
     return {
+        "models": models,   # ✅ FIX
         "oof_proba": oof_proba,
         "test_proba": test_proba
     }
@@ -248,7 +252,7 @@ def main():
     # =============================
 
     joblib.dump(cat_res["models"], "models/catboost_models.pkl")
-    joblib.dump(lgb_res, "models/lgbm_model.pkl")
+    joblib.dump(lgb_res["models"], "models/lgbm_models.pkl")
 
     np.save("models/oof_preds.npy", blend_oof)
 
