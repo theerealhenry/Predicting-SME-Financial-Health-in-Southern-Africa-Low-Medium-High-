@@ -134,7 +134,7 @@ This project leverages advanced feature engineering and explainable AI technique
 
 SHAP (SHapley Additive exPlanations) was used to interpret model predictions and identify the most influential features.
 
-![SHAP Summary](figures/Top SHAP features.png)
+![SHAP Summary](figures/Top_SHAP_features.png)
 
 **Key Observations:**
 - Financial access indicators strongly influence SME health classification
@@ -147,7 +147,7 @@ SHAP (SHapley Additive exPlanations) was used to interpret model predictions and
 
 Understanding class distribution is critical for model design and evaluation.
 
-![Target Distribution](figures/Target Distribution (Count).png)
+![Target Distribution](figures/Target_Distribution_(Count).png)
 
 **Insights:**
 - The dataset exhibits class imbalance across financial health categories
