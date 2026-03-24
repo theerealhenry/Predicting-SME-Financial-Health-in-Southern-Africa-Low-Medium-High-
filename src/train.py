@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import os
-import re
-import json
 import random
 import joblib
 import numpy as np
@@ -34,7 +32,7 @@ os.makedirs("outputs", exist_ok=True)
 
 
 # =============================
-# SEED (Deterministic)
+# SEED
 # =============================
 
 def set_seed(seed=42):
@@ -51,7 +49,7 @@ def macro_f1(y_true, y_pred):
 
 
 # =============================
-# CATBOOST PIPELINE
+# CATBOOST
 # =============================
 
 def run_catboost_cv(X, y, X_test, params, cv):
@@ -62,7 +60,6 @@ def run_catboost_cv(X, y, X_test, params, cv):
     cat_cols = [c for c in X.columns if not pd.api.types.is_numeric_dtype(X[c])]
     cat_idx = [X.columns.get_loc(c) for c in cat_cols]
 
-    # Fix categorical values
     for c in cat_cols:
         X[c] = X[c].astype("string").fillna("missing")
         X_test[c] = X_test[c].astype("string").fillna("missing")
@@ -72,7 +69,6 @@ def run_catboost_cv(X, y, X_test, params, cv):
     oof_proba = np.zeros((len(X), n_classes))
     test_proba = np.zeros((len(X_test), n_classes))
     models = []
-    scores = []
 
     for fold, (tr_idx, va_idx) in enumerate(cv.split(X, y), 1):
         print(f"CatBoost Fold {fold}")
@@ -96,16 +92,10 @@ def run_catboost_cv(X, y, X_test, params, cv):
         proba_va = model.predict_proba(va_pool)
         proba_te = model.predict_proba(te_pool)
 
-        pred_va = np.argmax(proba_va, axis=1)
-        score = macro_f1(y_va, pred_va)
-
         oof_proba[va_idx] = proba_va
         test_proba += proba_te / cv.n_splits
 
-        scores.append(score)
         models.append(model)
-
-        print(f"Fold {fold} F1: {score:.4f}")
 
     print(f"CatBoost OOF F1: {macro_f1(y, np.argmax(oof_proba, axis=1)):.4f}")
 
@@ -117,7 +107,7 @@ def run_catboost_cv(X, y, X_test, params, cv):
 
 
 # =============================
-# LIGHTGBM PIPELINE
+# LIGHTGBM
 # =============================
 
 def run_lgb_cv(X, y, X_test, params, cv):
@@ -127,7 +117,6 @@ def run_lgb_cv(X, y, X_test, params, cv):
 
     cat_cols = [c for c in X.columns if not pd.api.types.is_numeric_dtype(X[c])]
 
-    # Encode categoricals
     for col in cat_cols:
         X[col] = X[col].astype("category").cat.codes
         X_test[col] = X_test[col].astype("category").cat.codes
@@ -136,7 +125,7 @@ def run_lgb_cv(X, y, X_test, params, cv):
 
     oof_proba = np.zeros((len(X), n_classes))
     test_proba = np.zeros((len(X_test), n_classes))
-    models = []  # ✅ FIX
+    models = []
 
     for fold, (tr_idx, va_idx) in enumerate(cv.split(X, y), 1):
         print(f"LightGBM Fold {fold}")
@@ -153,7 +142,7 @@ def run_lgb_cv(X, y, X_test, params, cv):
             callbacks=[lgb.early_stopping(100), lgb.log_evaluation(0)]
         )
 
-        models.append(model)  # ✅ FIX
+        models.append(model)
 
         proba_va = model.predict_proba(X_va)
         proba_te = model.predict_proba(X_test)
@@ -164,7 +153,7 @@ def run_lgb_cv(X, y, X_test, params, cv):
     print(f"LightGBM OOF F1: {macro_f1(y, np.argmax(oof_proba, axis=1)):.4f}")
 
     return {
-        "models": models,   # ✅ FIX
+        "models": models,
         "oof_proba": oof_proba,
         "test_proba": test_proba
     }
@@ -178,18 +167,19 @@ def main():
 
     set_seed(RANDOM_STATE)
 
-    # Load data
     train = pd.read_csv(TRAIN_PATH)
     test = pd.read_csv(TEST_PATH)
 
     pre_cfg = PreprocessConfig()
     feat_cfg = FeatureConfig()
 
-    # CatBoost pipeline
+    # =============================
+    # FEATURE ENGINEERING
+    # =============================
+
     train_cb, test_cb = preprocess_train_test(train, test, pre_cfg, for_model="catboost")
     train_cb, test_cb = engineer_train_test_features(train_cb, test_cb, feat_cfg)
 
-    # LightGBM pipeline
     train_lgb, test_lgb = preprocess_train_test(train, test, pre_cfg, for_model="lightgbm")
     train_lgb, test_lgb = engineer_train_test_features(train_lgb, test_lgb, feat_cfg)
 
@@ -197,7 +187,10 @@ def main():
 
     y = train_cb[TARGET].copy()
 
-    # Label encode
+    # =============================
+    # LABEL ENCODER
+    # =============================
+
     le = LabelEncoder()
     y = pd.Series(le.fit_transform(y))
 
@@ -206,10 +199,25 @@ def main():
     X_cb = train_cb.drop(columns=[TARGET])
     X_lgb = train_lgb.drop(columns=[TARGET])
 
-    # CV
+    # =============================
+    # 🚨 SAVE PIPELINE (CRITICAL FIX)
+    # =============================
+
+    pipeline_artifacts = {
+        "feature_columns": X_cb.columns.tolist(),
+        "preprocess_cfg": pre_cfg,
+        "feature_cfg": feat_cfg
+    }
+
+    joblib.dump(pipeline_artifacts, "models/pipeline.pkl")
+    print("✅ Pipeline saved")
+
+    # =============================
+    # TRAINING
+    # =============================
+
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
 
-    # Params
     cat_params = {
         "loss_function": "MultiClass",
         "iterations": 2000,
@@ -230,12 +238,11 @@ def main():
         "n_jobs": -1
     }
 
-    # Train
     cat_res = run_catboost_cv(X_cb, y, test_cb.copy(), cat_params, cv)
     lgb_res = run_lgb_cv(X_lgb, y, test_lgb.copy(), lgb_params, cv)
 
     # =============================
-    # BLEND
+    # ENSEMBLE
     # =============================
 
     best_cat_w = 0.35
@@ -248,12 +255,11 @@ def main():
     print(f"\nFinal Ensemble F1: {score:.4f}")
 
     # =============================
-    # SAVE
+    # SAVE MODELS
     # =============================
 
     joblib.dump(cat_res["models"], "models/catboost_models.pkl")
     joblib.dump(lgb_res["models"], "models/lgbm_models.pkl")
-
     np.save("models/oof_preds.npy", blend_oof)
 
     print("✅ Training complete")
